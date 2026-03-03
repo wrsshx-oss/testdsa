@@ -6263,6 +6263,7 @@
                                 this.vertices[3 * g] = M,
                                 this.vertices[3 * g + 1] = T,
                                 this.vertices[3 * g + 2] = i ? 0 : 1e3,
+                                null != this.parent && null != this.parent.playerInfo && (p = this.OlO10.names.get(O), v = 0, null != this.OlO10.lll10.OO1I0.I0I10[O] && (v = Math.max(0, this.OlO10.lll10.OO1I0.I0I10[O].O10O1.status.shield)), this.parent.playerInfo.updatePlayerData(O, M, T, p, v, Date.now())),
                                 this.type[g] = 1,
                                 0 === h && this.OlO10.mode.radar_shows_leader ? (I0OIO.lOI1O(30 / 360, _, 1, k),
                                 this.type[g] = 3) : h <= 9 && (this.type[g] = 1),
@@ -6430,6 +6431,89 @@
                 }
                 ,
                 hasProp = {}.hasOwnProperty,
+                this.RadarPlayerOverlay = function() {
+                    function t(t) {
+                        this.OlO10 = t,
+                        this.canvas = document.createElement("canvas"),
+                        this.canvas.width = 1024,
+                        this.canvas.height = 1024,
+                        this.texture = new THREE.Texture(this.canvas),
+                        this.texture.minFilter = THREE.LinearFilter,
+                        this.l0l0I = new THREE.PlaneGeometry(1,1),
+                        this.material = new THREE.MeshBasicMaterial({
+                            map: this.texture,
+                            transparent: !0,
+                            depthTest: !1,
+                            depthWrite: !1,
+                            blending: THREE.NormalBlending
+                        }),
+                        this.I00Il = new THREE.Mesh(this.l0l0I,this.material),
+                        this.I00Il.scale.set(1,1,1),
+                        this.I00Il.position.z = -50,
+                        this.players_data = {}
+                    }
+                    return t.prototype.setHue = function(t) {
+                        this.hue = t
+                    }
+                    ,
+                    t.prototype.O001O = function(t, e) {
+                        return this.data = t,
+                        this.hue = e,
+                        this.repaint()
+                    }
+                    ,
+                    t.prototype.updatePlayerData = function(t, e, i, s, l, n) {
+                        this.players_data[t] = {
+                            x: e,
+                            y: i,
+                            name: s,
+                            shield: l,
+                            time: n
+                        }
+                    }
+                    ,
+                    t.prototype.repaint = function() {
+                        var t, e, i, s, l, n, a, o, r;
+                        if (null != this.canvas) {
+                            for (t = this.canvas.getContext("2d"),
+                            t.clearRect(0, 0, this.canvas.width, this.canvas.height),
+                            t.font = "14pt Play",
+                            t.textAlign = "center",
+                            t.textBaseline = "middle",
+                            t.fillStyle = "rgba(255,255,255,0.8)",
+                            t.strokeStyle = "rgba(0,0,0,0.5)",
+                            t.lineWidth = 2,
+                            e = this.canvas.width / 2,
+                            i = this.canvas.height / 2,
+                            n = 512 * 1.5,
+                            l = 0,
+                            a = this.players_data; l < 1e3; l++)
+                                if (null != a[l]) {
+                                    s = a[l];
+                                    try {
+                                        o = e + (s.x - 0) * n,
+                                        r = i + (s.y - 0) * n,
+                                        o > 20 && o < this.canvas.width - 20 && r > 20 && r < this.canvas.height - 20 && (t.strokeText(s.name, o, r + 20),
+                                        t.fillText(s.name, o, r + 20),
+                                        s.shield >= 0 && (t.strokeText("HP:" + Math.round(s.shield), o, r + 40),
+                                        t.fillText("HP:" + Math.round(s.shield), o, r + 40)))
+                                    } catch (t) {
+                                        t
+                                    }
+                                }
+                            return this.texture.needsUpdate = !0
+                        }
+                    }
+                    ,
+                    t.prototype.clearOldData = function(t) {
+                        var e, i;
+                        for (e in this.players_data)
+                            i = this.players_data[e],
+                            Date.now() - i.time > 5e3 && delete this.players_data[e]
+                    }
+                    ,
+                    t
+                }(),
                 this.l01ll = function(t) {
                     function e(t, i) {
                         this.OlO10 = t,
@@ -6492,7 +6576,8 @@
                             this.systemname.O001O(t, e),
                             this.infobar.O001O(t, e),
                             this.line.O001O(t, e),
-                            this.IOOIO.updateHue(t, e)
+                            this.IOOIO.updateHue(t, e),
+                            null != this.playerInfo && this.playerInfo.O001O(t, e)
                     }
                     ,
                     e.prototype.setHue = function(t) {
@@ -6501,7 +6586,8 @@
                             this.systemname.setHue(t),
                             this.infobar.setHue(t),
                             this.line.setHue(t),
-                            this.IOOIO.setHue(t)
+                            this.IOOIO.setHue(t),
+                            null != this.playerInfo && this.playerInfo.setHue(t)
                     }
                     ,
                     e.prototype.OIIIl = function() {
@@ -6517,6 +6603,8 @@
                         this.IOOIO = new I0O1O(this.OlO10),
                         this.object.add(this.IOOIO.lOIOI),
                         this.IOOIO.lOIOI.scale.set(.5, .5, .5),
+                        this.playerInfo = new this.OlO10.constructor.prototype.constructor.RadarPlayerOverlay(this.OlO10),
+                        this.object.add(this.playerInfo.I00Il),
                         this.parent.object.add(this.object)),
                         this.object.visible = this.visible
                     }
@@ -6531,6 +6619,8 @@
                             return null != this.line && this.line.ll0OO(),
                             null != this.IOOIO && this.IOOIO.ll0OO(),
                             null != this.infobar && this.infobar.ll0OO(),
+                            null != this.playerInfo && (this.playerInfo.clearOldData(),
+                            this.playerInfo.repaint()),
                             null != this.systemname ? this.systemname.IO01O() : void 0
                     }
                     ,
